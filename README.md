@@ -1,4 +1,4 @@
 # QuestBot
 This bot provides utilities for the Paragon discord server.
 
-**q!hunters:** Counts the numbers and levels of current quest hunters.
+**q!hunters:** Displays the current number of hunters, broken down by level.
