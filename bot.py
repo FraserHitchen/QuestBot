@@ -15,8 +15,19 @@ load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 intents = discord.Intents(messages=True, guilds=True, members=True)
 bot = commands.Bot(command_prefix='q!', intents=intents)
-'''bot.remove_command('help')'''""
+hunterRole = "Quest Hunter"
 roleFormat = "lvl"
+
+class questHelp(commands.MinimalHelpCommand):
+    '''
+    Changes help commands to use an embed.
+    '''
+    async def send_pages(self):
+        destination = self.get_destination()
+        for page in self.paginator.pages:
+            emby = discord.Embed(description=page)
+            await destination.send(embed=emby)
+bot.help_command = questHelp()
 
 @bot.event
 async def on_ready():
@@ -26,11 +37,14 @@ async def on_ready():
     
 @bot.command(name='hunters')
 async def hunters(ctx):
+    '''
+    Displays the current number of hunters, broken down by level.
+    '''
     questHunters = []
     guild = ctx.channel.guild
     for member in guild.members:
         for role in member.roles:
-            if role.name == "Quest Hunter":
+            if role.name == hunterRole:
                 questHunters.append(member)
     
     totalHunters = len(questHunters)
@@ -46,6 +60,9 @@ async def hunters(ctx):
     result = ""
     for role in hunterRoles:
         result += f"\n**Level {role[0]} Hunters:** {role[1]}"
-    await ctx.send(embed=discord.Embed(title="Quest Hunter Breakdown", description=f"Total Quest Hunters: {totalHunters} {result}"))    
+        
+    embed = discord.Embed(title="Quest Hunter Breakdown", description=f"Total Quest Hunters: {totalHunters}\n━━━━━━━━━━ {result}")
+    embed.set_footer(text="q!hunters | Fraser") 
+    await ctx.send(embed=embed)    
     
 bot.run(TOKEN)
