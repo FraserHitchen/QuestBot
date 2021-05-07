@@ -18,6 +18,10 @@ bot = commands.Bot(command_prefix='q!', intents=intents)
 hunterRole = "Quest Hunter"
 roleFormat = "lvl"
 
+questHunters = []
+hunterRoles = []
+totalHunters = 0
+
 class questHelp(commands.MinimalHelpCommand):
     '''
     Changes help commands to use an embed.
@@ -35,28 +39,40 @@ async def on_ready():
     print(f'{bot.user} has connected to Discord!')
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="the quest board"))
     
-@bot.command(name='hunters')
-async def hunters(ctx):
-    '''
-    Displays the current number of hunters, broken down by level.
-    '''
-    questHunters = []
+def getHunters(ctx):  
     guild = ctx.channel.guild
+    global questHunters
     for member in guild.members:
         for role in member.roles:
             if role.name == hunterRole:
                 questHunters.append(member)
     
-    totalHunters = len(questHunters)
-    hunterRoles = []
-    for hunter in questHunters:
+def formatRoles(hunters):
+    global hunterRoles
+    global totalHunters
+    totalHunters = len(hunters)
+    for hunter in hunters:
         for role in hunter.roles:
             hunterRoles.append(role.name)
-    
+           
     hunterRoles = dict(Counter(hunterRoles))
     hunterRoles = [(role, count) for role, count in hunterRoles.items() if roleFormat in role.lower()]
     hunterRoles = [(int(role[0].strip(f"{roleFormat} ")), role[1]) for role in hunterRoles]
-    hunterRoles = sorted(hunterRoles)
+    hunterRoles = sorted(hunterRoles)  
+    
+@bot.command(name='hunters')
+async def hunters(ctx):
+    '''
+    Displays the current number of hunters, broken down by level.
+    '''
+    global questHunters
+    global hunterRoles
+    global totalHunters
+    
+    getHunters(ctx)
+    
+    formatRoles(questHunters)
+    
     result = ""
     for role in hunterRoles:
         result += f"\n**Level {role[0]} Hunters:** {role[1]}"
