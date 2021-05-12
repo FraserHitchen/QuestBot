@@ -8,7 +8,6 @@ A quest utilities bot.
 from discord.ext import commands
 import discord
 import os
-import pickle
 import asyncio
 import json
 from dotenv import load_dotenv
