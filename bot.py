@@ -17,8 +17,14 @@ import bot_utils as bu
 
 redis_server = redis.Redis()
 load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
-#TOKEN2 = str(redis_server.get('DISCORD_TOKEN').decode('utf-8'))
+
+try:
+    TOKEN = str(redis_server.get('DISCORD_TOKEN').decode('utf-8'))
+except:
+    TOKEN = os.getenv('DISCORD_TOKEN')
+    print("Token accepted from env.")
+else:
+    print("Token accepted from redis.")
 intents = discord.Intents(messages=True, guilds=True, members=True, reactions=True, emojis=True)
 bot = commands.Bot(command_prefix='q!', intents=intents)
 quest_hunter_roles = {}
@@ -56,7 +62,7 @@ async def on_ready():
     global hunter_reactions
     
     print(f'{bot.user} has connected to Discord!')
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name='the quest board'))
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name='for quests | q!help'))
 
     react_input = {}
     for guild in bot.guilds:
@@ -422,4 +428,3 @@ async def on_command_error(ctx, error):
     await error_embed.delete()
 
 bot.run(TOKEN)
-#bot.run(TOKEN2)
