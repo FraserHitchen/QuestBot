@@ -309,57 +309,12 @@ async def prune(ctx, message_link : str):
         prune_embed.add_field(name=field_name, value=field_value, inline='False')
     prune_embed.set_footer(text='q!prune | Fraser') 
     await ctx.send(embed=prune_embed)
-            
-@bot.command(name='prune_hunters')
-@approved_only()
-async def prune_hunters(ctx):
-    '''Prune hunter reactions from users which are no longer on the server.'''
-    await bu.safe_message_delete(ctx)
-    
-    guild = ctx.guild
-    
-    # Checks if a reaction role has been made
-    #     If yes -> proceed with function
-    #     If no  -> send an error message
-    if (react_messages[guild.id] is None or hunter_reactions[guild.id] is None):
-        bot_message = await ctx.send(embed=discord.Embed(title='Reaction Role Not Found', description=f'A reaction role could not be found. Run `q!setup` to create a reaction role.'))
-        await asyncio.sleep(5) 
-        await bot_message.delete()
-    else:
-        await update_react(ctx)
-        
-        guild = ctx.guild
-        removed_users = []
-        # Gets all the members that have reacted to the message and flattens into a list
-        reactors = await hunter_reactions[guild.id].users().flatten()
-        # Checks if members in the list have left the server, and removes their reaction if so
-        for user in reactors:
-            if guild.get_member(user.id) is None and user != bot.user:
-                await hunter_reactions[guild.id].remove(user)
-                removed_users.append(user)
-                print(f'{user} no longer in server.') 
-                
-        totalRemoved = len(removed_users)
-        result = f'A total of {totalRemoved} users were detected as no longer being on the server, and their quest hunter reaction was removed.\n\n**Removals:**\n━━━━━━━━━━'
-        for user in removed_users:
-            result += f'\n{user}'
-        prune_embed=discord.Embed(title='Prune Complete', description=f'{result}')
-        prune_embed.set_footer(text='q!prune_hunters | Fraser') 
-        await ctx.send(embed=prune_embed)  
 
 @bot.command(name='kill')
 @approved_only()
 async def kill(ctx):
     '''Kills the bot.'''
     await bot.close()
-    
-@bot.command(name='test')
-async def test(ctx, inp):
-    result = [0]*3
-    result[0], result[1], result[2] = await bu.convert_link(ctx, inp)
-    for i in result:  
-        print(f'{i}:{type(i)}')
-        
        
 @bot.event
 async def on_raw_reaction_add(payload):
