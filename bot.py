@@ -83,7 +83,7 @@ def approved_only():
         raise commands.MissingPermissions('')
     return commands.check(predicate)
 
-commands.has_permissions(administrator=True), commands.is_owner(), commands.has_role("Bot Team")
+commands.has_permissions(administrator=True), commands.is_owner(), commands.has_role('Bot Team')
 
 def dm_only():
     async def predicate(ctx):
@@ -175,14 +175,14 @@ async def setup(ctx, message_link):
     guild_id, channel_id, message_id = await bu.convert_link(ctx, message_link)
     guild = bot.get_guild(guild_id)
     if guild != ctx.guild:
-        raise commands.CommandInvokeError("Attempted prune for message in different guild")
+        raise commands.CommandInvokeError('Attempted prune for message in different guild')
     channel = bot.get_channel(channel_id)
     react_messages[guild.id] = await channel.fetch_message(message_id)
     
     await bu.safe_message_delete(ctx)
     
     react_embed = discord.Embed(title='React here!', description=f'Message link accepted! Now react to this post with the emoji you wish to use.')
-    react_embed.set_footer(text="q!setup | Fraser")
+    react_embed.set_footer(text='q!setup | Fraser')
     react_embed = await ctx.send(embed=react_embed)
     
     def check(reaction, user):
@@ -208,7 +208,7 @@ async def setup(ctx, message_link):
     print(f'Successful setup, output: {react_output}')
     
     setup_embed=discord.Embed(title='Successful Setup', description=f'Quest hunter role reaction successfully set up.\n━━━━━━━━━━\nMessage: {react_messages[guild.id].content}\nChannel: {react_messages[guild.id].channel.name}\nEmoji: {react_emojis[guild.id]}')
-    setup_embed.set_footer(text="q!setup | Fraser")
+    setup_embed.set_footer(text='q!setup | Fraser')
     setup_embed = await ctx.send(embed = setup_embed)
         
     with open(f'{guild.id}.txt', 'w') as outfile:
@@ -245,7 +245,7 @@ async def reset(ctx):
             await react_messages[guild.id].remove_reaction(react_emojis[guild.id], bot.user)
             react_messages[guild.id] = react_emojis[guild.id] = hunter_reactions[guild.id] = None
             open(f'{guild.id}.txt', 'w').close()
-            print('Successful reset on {guild.name}')
+            print(f'Successful reset on {guild.name}')
             
             reset_embed = discord.Embed(title='Successful Reset', description=f'The quest hunter reaction has successfully been reset.')
             reset_embed.set_footer(text='q!reset | Fraser') 
@@ -264,7 +264,7 @@ async def prune(ctx, message_link : str):
     guild_id, channel_id, message_id = await bu.convert_link(ctx, message_link)
     guild = bot.get_guild(guild_id)
     if guild != ctx.guild:
-        raise commands.CommandInvokeError("Attempted prune for message in different guild")
+        raise commands.CommandInvokeError('Attempted prune for message in different guild')
     channel = bot.get_channel(channel_id)
     message = await channel.fetch_message(message_id)
 
@@ -352,7 +352,7 @@ async def test(ctx, inp):
     result = [0]*3
     result[0], result[1], result[2] = await bu.convert_link(ctx, inp)
     for i in result:  
-        print(f"{i}:{type(i)}")
+        print(f'{i}:{type(i)}')
         
        
 @bot.event
@@ -397,7 +397,7 @@ async def on_raw_reaction_remove(payload):
 @bot.event
 async def on_command_error(ctx, error):
     '''Handle command errors.'''
-    print(f"Command q!{ctx.command} called by {ctx.author} raised error: {error}")
+    print(f'Command q!{ctx.command} called by {ctx.author} raised error: {error}')
      
     # Prevents commands with local handlers being handled here
     if hasattr(ctx.command, 'on_error'):
