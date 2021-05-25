@@ -9,5 +9,3 @@ This bot provides utilities for the Paragon discord server.
 
 **q!prune:** Prune reactions on a message from users which are no longer on the server.
 
-**q!prune_hunters** Prune hunter reactions from users which are no longer on the server.
-
