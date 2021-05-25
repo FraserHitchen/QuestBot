@@ -164,9 +164,9 @@ async def update_react(ctx):
 async def setup(ctx, message_link):
     '''Set up a new quest hunter reaction role. Info is stored as a JSON file.
     
-    This command requires 1 argument which is the message ID of the message you want users to react to. After sending the command react to your own post with the desired reaction.
+    This command requires 1 argument which is a link to the message you want users to react to.
     
-    If the message is in a different channel, you also need to include the ID of that channel as a second argument.
+    After sending the command you react to the bot's post to set the emoji you want.
     '''
     global react_messages
     global react_emojis
@@ -258,7 +258,7 @@ async def reset(ctx):
 @bot.command(name='prune')
 @approved_only()
 async def prune(ctx, message_link : str):
-    '''Prune reactions from users which are no longer on the server.'''
+    '''Prune reactions on a message from users which are no longer on the server.'''
     await bu.safe_message_delete(ctx)
 
     guild_id, channel_id, message_id = await bu.convert_link(ctx, message_link)
@@ -374,8 +374,7 @@ async def on_raw_reaction_add(payload):
         if str(payload.emoji) == str(check_emoji) and payload.message_id == check_id:  
             await user.add_roles(quest_hunter_roles[guild.id])
             print(f'{quest_hunter_roles[guild.id].name} role added to {user} on {guild.name}')
-            
-            
+                 
 @bot.event
 async def on_raw_reaction_remove(payload):
     '''Remove user quest hunter role if they remove reaction to a reaction role.'''
@@ -406,7 +405,7 @@ async def on_command_error(ctx, error):
          
          
     if isinstance(error, commands.CommandNotFound):
-        error_embed = discord.Embed(title='Command Not Found', description=f'So such command exists. Use `q!help` for a list of commands.') 
+        error_embed = discord.Embed(title='Command Not Found', description=f'No such command exists. Use `q!help` for a list of commands.') 
          
     elif isinstance(error, commands.MissingRequiredArgument):
         error_embed = discord.Embed(title='Missing Argument', description=f'You are missing a required argument for this command. Use `q!help {ctx.command}` for help.')      
@@ -421,6 +420,6 @@ async def on_command_error(ctx, error):
     error_embed = await ctx.send(embed=error_embed)
     await asyncio.sleep(5) 
     await error_embed.delete()
-            
+
 bot.run(TOKEN)
 #bot.run(TOKEN2)
