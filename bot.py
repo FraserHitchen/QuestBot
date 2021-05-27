@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 from collections import Counter
 import redis
 import bot_utils as bu
+import re
 
 redis_server = redis.Redis()
 load_dotenv()
@@ -94,6 +95,15 @@ commands.has_permissions(administrator=True), commands.is_owner(), commands.has_
 def dm_only():
     async def predicate(ctx):
         approved_roles = ['The Power Rangers', 'Moderator', 'Bot Team', 'Dungeon Master', 'Trainee DM']
+        for role in ctx.author.roles:
+            if role.name in approved_roles:
+                return True
+        raise commands.MissingPermissions('')
+    return commands.check(predicate)
+
+def cat_and_approved():
+    async def predicate(ctx):
+        approved_roles = ['The Power Rangers', 'Moderator', 'Bot Team', 'Character Approval Team']
         for role in ctx.author.roles:
             if role.name in approved_roles:
                 return True
@@ -315,7 +325,79 @@ async def prune(ctx, message_link : str):
 async def kill(ctx):
     '''Kills the bot.'''
     await bot.close()
-       
+    
+@bot.command(name='stats')
+@cat_and_approved()
+async def stats(ctx, channel_id = int('777981024860241920')):
+    ''''''
+    guild = ctx.guild
+    channel = guild.get_channel(channel_id)
+    messages = await channel.history(limit=20, oldest_first=True).flatten()
+    
+    # Remove extra text
+    messages[0].content = re.split(r'(Aarakocra)', messages[0].content)
+    messages[0].content = messages[0].content[1] + messages[0].content[2]
+    
+    
+    messages[2].content = messages[2].content.replace('|B', '| B')
+    messages[2].content = re.split(r'(Barbarian)', messages[2].content)
+    messages[2].content = messages[2].content[1] + messages[2].content[2]
+    print(messages[2].content)
+    
+    # Races and Classes
+    reactions = []
+    message_text = []
+    for message in messages[0:3]:
+        reactions.append(message.reactions)
+        message_text.append(message.content)
+        
+    split_text = []    
+    for message in message_text:
+        split_text.append(message.split(' | '))   
+    
+    react_counts = []
+    for text_list, reaction_list in zip(split_text, reactions):
+        react_list = []
+        for text, reaction in zip(text_list, reaction_list):
+            react_list.append((text, reaction.count))
+        react_counts.append(react_list)
+        
+    categories = ['Races', 'Races', 'Classes']
+    
+    result_dict = {}
+    for category, count in zip(categories, react_counts):
+        if category not in result_dict:
+            result_dict[category] = []
+        result_dict[category].append(count)
+        
+    for key in result_dict:
+        flat_list = [item for sublist in result_dict[key] for item in sublist]
+        result_dict[key] = flat_list
+    
+    # Add artificer to classes
+    result_dict['Classes'].append(('Artificer :gear:', messages[5].reactions[0].count))
+    
+    # Level stuff
+    level_reactions = messages[3].reactions
+    result_dict['Levels']=[]
+    for reaction in level_reactions:
+        result_dict['Levels'].append((reaction.emoji,reaction.count))
+    
+    categories = ['Races', 'Classes', 'Levels']
+    
+    # Output embed
+    output_str = f''
+    stat_embed=discord.Embed(title='Server Stats', description=f'{output_str}')
+    for category in categories:
+        field_name = category
+        field_value = ''
+        for value in result_dict[category]:
+            field_value += f'{value[0]}: {value[1]}\n'
+        if field_value == '': field_value = 'None'
+        stat_embed.add_field(name=field_name, value=field_value, inline='True')
+    stat_embed.set_footer(text='q!stats | Fraser') 
+    await ctx.send(embed=stat_embed)
+
 @bot.event
 async def on_raw_reaction_add(payload):
     '''Give user quest hunter role if they react to a reaction role.'''
@@ -355,31 +437,31 @@ async def on_raw_reaction_remove(payload):
             await user.remove_roles(quest_hunter_roles[guild.id])
             print(f'{quest_hunter_roles[guild.id].name} role removed from {user} on {guild.name}')
             
-@bot.event
-async def on_command_error(ctx, error):
-    '''Handle command errors.'''
-    print(f'Command q!{ctx.command} called by {ctx.author} raised error: {error}')
-     
-    # Prevents commands with local handlers being handled here
-    if hasattr(ctx.command, 'on_error'):
-            return
-         
-         
-    if isinstance(error, commands.CommandNotFound):
-        error_embed = discord.Embed(title='Command Not Found', description=f'No such command exists. Use `q!help` for a list of commands.') 
-         
-    elif isinstance(error, commands.MissingRequiredArgument):
-        error_embed = discord.Embed(title='Missing Argument', description=f'You are missing a required argument for this command. Use `q!help {ctx.command}` for help.')      
-         
-    elif isinstance(error, commands.MissingPermissions):
-        error_embed = discord.Embed(title='Missing Permissions', description=f'You do not have the required permissions to run that command.')
-          
-    else:
-        error_embed = discord.Embed(title='Error', description=f'An error occurred when running this command. Use `q!help` for help.')
-       
-    error_embed.set_footer(text='q!help | Fraser') 
-    error_embed = await ctx.send(embed=error_embed)
-    await asyncio.sleep(5) 
-    await error_embed.delete()
+# @bot.event
+# async def on_command_error(ctx, error):
+#     '''Handle command errors.'''
+#     print(f'Command q!{ctx.command} called by {ctx.author} raised error: {error}')
+#      
+#     # Prevents commands with local handlers being handled here
+#     if hasattr(ctx.command, 'on_error'):
+#             return
+#          
+#          
+#     if isinstance(error, commands.CommandNotFound):
+#         error_embed = discord.Embed(title='Command Not Found', description=f'No such command exists. Use `q!help` for a list of commands.') 
+#          
+#     elif isinstance(error, commands.MissingRequiredArgument):
+#         error_embed = discord.Embed(title='Missing Argument', description=f'You are missing a required argument for this command. Use `q!help {ctx.command}` for help.')      
+#          
+#     elif isinstance(error, commands.MissingPermissions):
+#         error_embed = discord.Embed(title='Missing Permissions', description=f'You do not have the required permissions to run that command.')
+#           
+#     else:
+#         error_embed = discord.Embed(title='Error', description=f'An error occurred when running this command. Use `q!help` for help.')
+#        
+#     error_embed.set_footer(text='q!help | Fraser') 
+#     error_embed = await ctx.send(embed=error_embed)
+#     await asyncio.sleep(5) 
+#     await error_embed.delete()
 
 bot.run(TOKEN)
