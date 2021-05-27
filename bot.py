@@ -330,7 +330,7 @@ async def kill(ctx):
 @bot.command(name='stats')
 @cat_and_approved()
 async def stats(ctx, channel_id = int('777981024860241920')):
-    ''''''
+    '''Print server stats.'''
     guild = ctx.guild
     channel = guild.get_channel(channel_id)
     messages = await channel.history(limit=20, oldest_first=True).flatten()
@@ -402,10 +402,12 @@ async def stats(ctx, channel_id = int('777981024860241920')):
 @bot.command(name='release')
 @approved_only()
 async def release(ctx):  
-
+    '''Print the latest release information.'''
+    await bu.safe_message_delete(ctx)
     response = requests.get('https://api.github.com/repos/FraserHitchen/QuestBot/releases/latest')
-    print(response.json()['name'])
-    print(response.json()['body'])
+    release_embed = discord.Embed(title=f'{response.json()["name"]}', description=f'{response.json()["body"]}')
+    release_embed.set_footer(text=f'{response.json()["html_url"]}') 
+    await ctx.send(embed=release_embed)
 
 @bot.event
 async def on_raw_reaction_add(payload):
