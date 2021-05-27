@@ -15,6 +15,7 @@ from collections import Counter
 import redis
 import bot_utils as bu
 import re
+import requests
 
 redis_server = redis.Redis()
 load_dotenv()
@@ -23,9 +24,9 @@ try:
     TOKEN = str(redis_server.get('DISCORD_TOKEN').decode('utf-8'))
 except:
     TOKEN = os.getenv('DISCORD_TOKEN')
-    print("Token accepted from env.")
+    print('Token accepted from env.')
 else:
-    print("Token accepted from redis.")
+    print('Token accepted from redis.')
 intents = discord.Intents(messages=True, guilds=True, members=True, reactions=True, emojis=True)
 bot = commands.Bot(command_prefix='q!', intents=intents)
 quest_hunter_roles = {}
@@ -398,6 +399,14 @@ async def stats(ctx, channel_id = int('777981024860241920')):
     stat_embed.set_footer(text='q!stats | Fraser') 
     await ctx.send(embed=stat_embed)
 
+@bot.command(name='release')
+@approved_only()
+async def release(ctx):  
+
+    response = requests.get('https://api.github.com/repos/FraserHitchen/QuestBot/releases/latest')
+    print(response.json()['name'])
+    print(response.json()['body'])
+
 @bot.event
 async def on_raw_reaction_add(payload):
     '''Give user quest hunter role if they react to a reaction role.'''
@@ -437,31 +446,35 @@ async def on_raw_reaction_remove(payload):
             await user.remove_roles(quest_hunter_roles[guild.id])
             print(f'{quest_hunter_roles[guild.id].name} role removed from {user} on {guild.name}')
             
-# @bot.event
-# async def on_command_error(ctx, error):
-#     '''Handle command errors.'''
-#     print(f'Command q!{ctx.command} called by {ctx.author} raised error: {error}')
-#      
-#     # Prevents commands with local handlers being handled here
-#     if hasattr(ctx.command, 'on_error'):
-#             return
-#          
-#          
-#     if isinstance(error, commands.CommandNotFound):
-#         error_embed = discord.Embed(title='Command Not Found', description=f'No such command exists. Use `q!help` for a list of commands.') 
-#          
-#     elif isinstance(error, commands.MissingRequiredArgument):
-#         error_embed = discord.Embed(title='Missing Argument', description=f'You are missing a required argument for this command. Use `q!help {ctx.command}` for help.')      
-#          
-#     elif isinstance(error, commands.MissingPermissions):
-#         error_embed = discord.Embed(title='Missing Permissions', description=f'You do not have the required permissions to run that command.')
-#           
-#     else:
-#         error_embed = discord.Embed(title='Error', description=f'An error occurred when running this command. Use `q!help` for help.')
-#        
-#     error_embed.set_footer(text='q!help | Fraser') 
-#     error_embed = await ctx.send(embed=error_embed)
-#     await asyncio.sleep(5) 
-#     await error_embed.delete()
+
+
+
+            
+@bot.event
+async def on_command_error(ctx, error):
+    '''Handle command errors.'''
+    print(f'Command q!{ctx.command} called by {ctx.author} raised error: {error}')
+      
+    # Prevents commands with local handlers being handled here
+    if hasattr(ctx.command, 'on_error'):
+            return
+          
+          
+    if isinstance(error, commands.CommandNotFound):
+        error_embed = discord.Embed(title='Command Not Found', description=f'No such command exists. Use `q!help` for a list of commands.') 
+          
+    elif isinstance(error, commands.MissingRequiredArgument):
+        error_embed = discord.Embed(title='Missing Argument', description=f'You are missing a required argument for this command. Use `q!help {ctx.command}` for help.')      
+          
+    elif isinstance(error, commands.MissingPermissions):
+        error_embed = discord.Embed(title='Missing Permissions', description=f'You do not have the required permissions to run that command.')
+           
+    else:
+        error_embed = discord.Embed(title='Error', description=f'An error occurred when running this command. Use `q!help` for help.')
+        
+    error_embed.set_footer(text='q!help | Fraser') 
+    error_embed = await ctx.send(embed=error_embed)
+    await asyncio.sleep(5) 
+    await error_embed.delete()
 
 bot.run(TOKEN)
