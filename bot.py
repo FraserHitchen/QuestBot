@@ -16,6 +16,7 @@ import redis
 import bot_utils as bu
 import re
 import requests
+from discord.ext.commands.errors import CommandInvokeError
 
 redis_server = redis.Redis()
 load_dotenv()
@@ -408,6 +409,35 @@ async def release(ctx):
     release_embed = discord.Embed(title=f'{response.json()["name"]}', description=f'{response.json()["body"]}')
     release_embed.set_footer(text=f'{response.json()["html_url"]}') 
     await ctx.send(embed=release_embed)
+    
+@bot.command(name='add_questers')
+@approved_only()
+async def add_questers(ctx, message_link, role):
+    role = int(role.strip('<@&>')) 
+    await bu.safe_message_delete(ctx)
+
+    guild_id, channel_id, message_id = await bu.convert_link(ctx, message_link)
+    guild = bot.get_guild(guild_id)
+    channel = bot.get_channel(channel_id)
+    message = await channel.fetch_message(message_id)
+    role = guild.get_role(role)
+    if role >= discord.utils.get(guild.roles,name="Bots"):
+        raise CommandInvokeError
+    
+    reaction_users = await message.reactions[0].users().flatten()
+    
+    users = ''
+    count = 0
+    for user in reaction_users:
+        if user != message.author and role not in user.roles:
+            await user.add_roles(role)
+            count += 1
+            users += f'{user.name}#{user.discriminator}\n'
+    print(f'q!add_quests called by {ctx.author}. {role} added to:\n {users}')
+    
+    quest_embed=discord.Embed(title='Quest Role Added', description=f'The role {role} has successfully been added to {count} users.\n{message_link}\n━━━━━━━━━━\n{users}')
+    quest_embed.set_footer(text='q!add_questers | Fraser')
+    quest_embed = await ctx.send(embed = quest_embed)
 
 @bot.event
 async def on_raw_reaction_add(payload):
@@ -456,24 +486,24 @@ async def on_raw_reaction_remove(payload):
 async def on_command_error(ctx, error):
     '''Handle command errors.'''
     print(f'Command q!{ctx.command} called by {ctx.author} raised error: {error}')
-      
+       
     # Prevents commands with local handlers being handled here
     if hasattr(ctx.command, 'on_error'):
             return
-          
-          
+           
+           
     if isinstance(error, commands.CommandNotFound):
         error_embed = discord.Embed(title='Command Not Found', description=f'No such command exists. Use `q!help` for a list of commands.') 
-          
+           
     elif isinstance(error, commands.MissingRequiredArgument):
         error_embed = discord.Embed(title='Missing Argument', description=f'You are missing a required argument for this command. Use `q!help {ctx.command}` for help.')      
-          
+           
     elif isinstance(error, commands.MissingPermissions):
         error_embed = discord.Embed(title='Missing Permissions', description=f'You do not have the required permissions to run that command.')
-           
+            
     else:
         error_embed = discord.Embed(title='Error', description=f'An error occurred when running this command. Use `q!help` for help.')
-        
+         
     error_embed.set_footer(text='q!help | Fraser') 
     error_embed = await ctx.send(embed=error_embed)
     await asyncio.sleep(5) 
