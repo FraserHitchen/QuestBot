@@ -32,8 +32,8 @@ async def input_to_id(ctx, inp):
     if isinstance(inp, int):
         return inp
     elif isinstance(inp, str):
-        if inp[0:2] == '<#':
-            inp = inp.strip('<#>')
+        if inp[0:2] == '<#' or inp[0:2] == '<@&':
+            inp = inp.strip('<#@&>')
             return int(inp)
         else:
             try:
